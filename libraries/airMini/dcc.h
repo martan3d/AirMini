@@ -18,14 +18,13 @@ extern "C" {
 typedef struct
 {
     uint8_t Data[DCCMAXLEN];
-    uint8_t New;
 	uint8_t	Size;
-    uint8_t Status;
 	
 } DCC_MSG ;
 
 void dccInit(void);
 uint8_t * getDCC();
+uint8_t decodeDCCPacket( DCC_MSG * dccptr);
 
 #endif /* DCC_H_ */
 

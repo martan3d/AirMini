@@ -17,6 +17,7 @@
 #define DATA 2
 #define END_BIT 3
 
+int8_t i;
 int16_t usec;
 int16_t dnow;
 int16_t BitCount;
@@ -24,12 +25,46 @@ int8_t  State;
 uint8_t dataByte;
 uint8_t byteCounter;
 uint8_t buffer[8];
-
+uint8_t DccBitVal = 0;
+uint8_t errorByte = 0;
 uint8_t dccbuff[sizeof(DCC_MSG)];
+
+const uint8_t servotable[] = { 0, 0, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 8, 8, 9, 8, 8, 8, 10, 10, 10 };
 
 uint8_t * getDCC()
 {
      return(dccbuff);
+}
+
+uint8_t decodeDCCPacket( DCC_MSG * dccptr)
+{
+	uint8_t l, i;
+	
+	l = dccptr->Size;       // length of packet
+	
+	switch(l)
+	{
+		case 3:             // three bytes
+		        SendByte(dccptr->Data[0]);
+		        SendByte(dccptr->Data[1]);
+		        SendByte(dccptr->Data[2]);
+		        break;
+				
+		case 4:
+		        SendByte(dccptr->Data[0]);      // debug out the serial port
+		        SendByte(dccptr->Data[1]);
+		        SendByte(dccptr->Data[2]);
+		        SendByte(dccptr->Data[3]);
+				break;
+				
+		case 5:
+		        SendByte(dccptr->Data[0]);
+		        SendByte(dccptr->Data[1]);
+		        SendByte(dccptr->Data[2]);
+		        SendByte(dccptr->Data[3]);
+		        SendByte(dccptr->Data[4]);
+		        break;
+	}
 }
 
 void dccInit(void)
@@ -40,11 +75,6 @@ void dccInit(void)
   EIMSK  = 0x01;            // EXT INT 0 enabled only
 }
 
-uint8_t DccBitVal = 0;
-uint8_t errorByte = 0;
-
-int8_t i;
-
 // ExtInterrupt on change of state of port pin D2 on atmega328p , DCC input stream
 
 ISR(INT0_vect)
@@ -54,21 +84,17 @@ ISR(INT0_vect)
 	
     if(PIND & 0x04)                         // if it's a one, start of pulse
     {                                       // so, we need to
-        usec = TCNT1;                //   snag the current time in microseconds
+        usec = TCNT1;                       //   snag the current time in microseconds
         return;                             // and that's all we need, exit
     }    
     else                                    // else we are at the end of the pulse, on the downside
     {                                       // how long was the pulse?
-        dnow = TCNT1 - usec;          // Get the now time minus the start time gives pulse width in us
+        dnow = TCNT1 - usec;                // Get the now time minus the start time gives pulse width in us
                                             // Longer pulse is a zero, short is one
         if ( dnow > 180 )
-        {
             DccBitVal = 0;                  // Longer is a zero
-        }        
         else 
-        {
             DccBitVal = 1;                  // short means a one
-        }        
     }
     
 
@@ -139,8 +165,8 @@ ISR(INT0_vect)
                     
                     if (errorByte == buffer[2])
                     {
-                        buffer[6] = byteCounter;            // save length
-                        buffer[7] = 0;
+                        buffer[5] = byteCounter;            // save length
+                        buffer[6] = 0;
 
                         for (i=0;i<sizeof(DCC_MSG);i++)     // Move message to buffer for background task
                             dccbuff[i] = buffer[i];
@@ -158,13 +184,13 @@ ISR(INT0_vect)
                     
                     if (errorByte == buffer[3])
                         {
-                            buffer[6] = byteCounter;        // save length
-                            buffer[7] = 0;
-
+                            buffer[5] = byteCounter;        // save length
+                            buffer[6] = 0;
+                                                            // move out of operations buffer into background buffer
                             for (i=0;i<sizeof(DCC_MSG);i++)
                               dccbuff[i] = buffer[i];
 
-                            setScheduledTask(TASK1);            // Schedule the background task
+                            setScheduledTask(TASK1);        // Schedule the background task
                         }                        
                    break;
                 }                
@@ -178,8 +204,8 @@ ISR(INT0_vect)
 
                     if (errorByte == buffer[4])             // if it matches, valid message came in
                     {
-                        buffer[6] = byteCounter;        	// save length
-                        buffer[7] = 0;
+                        buffer[5] = byteCounter;        	// save length
+                        buffer[6] = 0;
 
                         for (i=0;i<sizeof(DCC_MSG);i++)
                             dccbuff[i] = buffer[i];
