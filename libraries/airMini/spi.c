@@ -7,12 +7,66 @@
 #include <avr/io.h>
 #include "spi.h"
 
+
 uint8_t initData[48] = {0x40, 0x2E, 0x2E, 0x0D, 0x07, 0xD3, 0x91, 0xFF,
                         0x04, 0x32, 0x00, 0x4B, 0x06, 0x00, 0x22, 0xB7,
                         0x55, 0x8A, 0x93, 0x00, 0x23, 0x3B, 0x50, 0x07,
                         0x30, 0x18, 0x16, 0x6C, 0x03, 0x40, 0x91, 0x87,
                         0x6B, 0xF8, 0x56, 0x10, 0xE9, 0x2A, 0x00, 0x1F,
                         0x40, 0x00, 0x59, 0x7F, 0x3F, 0x81, 0x35, 0x09};
+						
+						
+	
+uint8_t initTXData[48] = {0x40,   // address byte, start with reg 0, in burst mode
+                          0x2E,   // IOCFG2
+                          0x2E,   // IOCFG1 
+                          0x0D,   // IOCFG0
+                          0x07,   // FIFOTHR
+                          0xD3,   // SYNC1
+                          0x91,   // SYNC0
+                          0xFF,   // PKTLEN
+                          0x04,   // PKTCTRL1
+                          0x32,   // PKTCTRL0
+                          0x00,   // ADDR
+                          0x4B,   // CHANNR
+                          0x0c,   // FSCTRL1
+                          0x00,   // FSCTRL0
+                          0x22,   // FREQ2
+                          0xB7,   // FREQ1
+                          0x55,   // FREQ0
+                          0x8C,   // MDMCFG4
+                          0x22,   // MDMCFG3
+                          0x93,   // MDMCFG2
+                          0x23,   // MDMCFG1                          
+                          0x3C,   // MDMCFG0
+                          0x47,   // DEVIATN
+                          0x07,   // MCSM2
+                          0x30,   // MCSM1
+                          0x18,   // MCSM0
+                          0x16,   // FOCCFG
+                          0x6C,   // BSCFG
+                          0x03,   // AGCCTRL2
+                          0x40,   // AGCCTRL1
+                          0x91,   // AGCCTRL0
+                          0x87,   // WOREVT1
+                          0x6B,   // WOREVT0
+                          0xF8,   // WORCTRL
+                          0x56,   // FREND1    0101 0110
+                          0x10,   // FREND0    0001 0000
+                          0xE9,   // FSCAL3
+                          0x2A,   // FSCAL2
+                          0x00,   // FSCAL1
+                          0x1F,   // FSCAL0
+                          0x40,   // RCCTRL1
+                          0x00,   // RCCTRL0
+                          0x59,   // FSTEST
+                          0x7F,   // PTEST
+                          0x3F,   // AGCTEST
+                          0x81,   // TEST2
+                          0x35,   // TEST1
+                          0x09    // TEST0
+};	
+
 
 // Channels designations are 0-16.  These are the corresponding values
 // for the CC1101.
@@ -68,19 +122,24 @@ void writeReg(uint8_t reg, unsigned int data)
 
 
 
-void startModem(uint8_t channel)
+void startModem(uint8_t channel, uint8_t mode)
 {
     uint8_t i;
-    
+    uint8_t *md;
     uint8_t powerCode = 0x89;     //use 0x89 for rx mode
     uint8_t channelCode = channels[channel];
-    uint8_t mode = RX;
     
+	if (mode == RX) 
+		md = initData;
+	else
+		md = initTXData;
+	
     sendReceive(STOP);           // send stop command to modem
 
     PORTB &= ~SS;                // select modem (port low)
-    for(i=0; i<48; i++)
-       clockSPI(initData[i]);
+    for(i=0; i<48; i++) {
+       clockSPI(md[i]);
+	}
     PORTB |= SS;                 // disable modem
 
     PORTB &= ~SS;                // select modem (port low)

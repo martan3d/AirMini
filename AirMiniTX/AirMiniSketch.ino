@@ -24,8 +24,8 @@ void setup() {
   initUART(38400);                            // More debugging, send serial data out
   initServoTimer();                           // Master Timer plus servo timer
   initializeSPI();                            // Initialize the SPI interface to the radio
-  dccInit();                                  // Enable DCC receive
-  startModem(0, RX);                          // Start on Airwire Channel zero
+  dccInit();                                  // Enable DCC receive off input
+  startModem(0, TX);                          // Start on Airwire Channel zero
   
   sei();                                      // enable interrupts
   
@@ -75,7 +75,7 @@ void loop() {
          if( now > BACKGROUNDTIME )            // Check for Time Scheduled Tasks
            {                                   // A priority Schedule could be implemented in here if needed
               then = getMsClock();             // Grab Clock Value for next time
-              sendReceive(RXMODE);             // keep the radio awake in RX mode
+              sendReceive(TX);
               PORTB ^= 1;                      // debug - monitor with logic analyzer
           }
 }

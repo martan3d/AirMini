@@ -15,7 +15,7 @@ extern "C" {
 void initializeSPI();
 uint8_t sendReceive(uint8_t);
 uint8_t readReg(uint8_t addr);
-void startModem(uint8_t channel);
+void startModem(uint8_t channel, uint8_t mode);
 
 
 #endif /* SPI_H_ */
