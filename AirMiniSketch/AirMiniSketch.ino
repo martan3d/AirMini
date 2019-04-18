@@ -18,14 +18,17 @@ uint8_t j;
 #define RX      0x34
 #define TX      0x35
 
+#define MODE TX                               // Change this for transmitter/receiver
+#define CHANNEL 0                             // Airwire Channel for both TX/RX
+
 void setup() {
 
-  DDRB |= 1;                                  // Use this for debugging
-  initUART(38400);                            // More debugging, send serial data out
+  DDRB |= 1;                                  // Use this for debugging if you wish
+  initUART(38400);                            // More debugging, send serial data out- decoded DCC packets
   initServoTimer();                           // Master Timer plus servo timer
   initializeSPI();                            // Initialize the SPI interface to the radio
   dccInit();                                  // Enable DCC receive
-  startModem(0, RX);                          // Start on Airwire Channel zero
+  startModem(CHANNEL, TX);                    // Start on this Airwire Channel
   
   sei();                                      // enable interrupts
   
@@ -75,7 +78,7 @@ void loop() {
          if( now > BACKGROUNDTIME )            // Check for Time Scheduled Tasks
            {                                   // A priority Schedule could be implemented in here if needed
               then = getMsClock();             // Grab Clock Value for next time
-              sendReceive(RXMODE);             // keep the radio awake in RX mode
+              sendReceive(TX);                 // keep the radio awake in RX mode
               PORTB ^= 1;                      // debug - monitor with logic analyzer
           }
 }
