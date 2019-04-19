@@ -28,7 +28,7 @@ void setup() {
   initServoTimer();                           // Master Timer plus servo timer
   initializeSPI();                            // Initialize the SPI interface to the radio
   dccInit();                                  // Enable DCC receive
-  startModem(CHANNEL, TX);                    // Start on this Airwire Channel
+  startModem(CHANNEL, MODE);                  // Start on this Airwire Channel
   
   sei();                                      // enable interrupts
   
@@ -50,15 +50,12 @@ void loop() {
 
              case TASK1:                       // Just pick a priority for the DCC packet, TASK1 will do 
                      dccptr = getDCC();        // we are here, so a packet has been assembled, get a pointer to our DCC data
-                     flag = 1;                 // see if it is a different message than what we already have
+                     flag = 1;                 // set to one if you want to see all messages, even repeated packets
 
                      for (j=0;j<6;j++)         // check all the data plus the stored length
-                        if (sendbuffer[j] != dccptr[j])
+                        if (sendbuffer[j] != dccptr[j])   // set flag above to 0 if you only want to see one copy
                            flag = 1;           // yes, something is different, it needs to go out
                 
-                  //   if (dccptr[0] == 0xff)    // occassional junk comes through
-                  //       flag=0;               // this needs to be thought out better, for now, don't process trash
-
                      if(flag)                  // only process if it's changed since last time
                      {                     
                        decodeDCCPacket((DCC_MSG*) dccptr);
@@ -78,7 +75,7 @@ void loop() {
          if( now > BACKGROUNDTIME )            // Check for Time Scheduled Tasks
            {                                   // A priority Schedule could be implemented in here if needed
               then = getMsClock();             // Grab Clock Value for next time
-              sendReceive(TX);                 // keep the radio awake in RX mode
+              sendReceive(MODE);               // keep the radio awake in MODE
               PORTB ^= 1;                      // debug - monitor with logic analyzer
           }
 }
