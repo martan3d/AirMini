@@ -12,4 +12,6 @@ If you run this board in transmit mode, you will need an opto isolator circuit t
 
 In RX mode, you will need a DCC amplifier to boost the logic level DCC signal to full power DCC.
 
-More info - http://blueridgeengineering.net/index.php/wiki/building-the-promini-air/
+Note that depending on the radio module, you may have to adjust the register values in spi.c
+
+More info - http://blueridgeengineering.net/building-the-promini/
